@@ -1,0 +1,29 @@
+{
+  "name": "ghost-api-tests",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "develop": "node -r esm index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ojeytonwilliams/trying-ghost-api.git"
+  },
+  "author": "",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/ojeytonwilliams/trying-ghost-api/issues"
+  },
+  "homepage": "https://github.com/ojeytonwilliams/trying-ghost-api#readme",
+  "devDependencies": {
+    "@tryghost/content-api": "^1.2.5",
+    "eslint": "^6.0.1"
+  },
+  "dependencies": {
+    "dotenv": "^8.0.0",
+    "esm": "^3.2.25",
+    "moment": "^2.24.0"
+  }
+}
