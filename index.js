@@ -3,7 +3,8 @@ import moment from 'moment';
 
 require('dotenv').config();
 
-const yesterday = moment().subtract(1, 'days').valueOf();
+// Note, it needs to be something that new Date() will understand, which format() gives you.
+const yesterday = moment().subtract(1, 'days').format();
 
 const api = new GhostContentAPI({
     url: 'https://olivereytonwilliams.com',
@@ -13,11 +14,9 @@ const api = new GhostContentAPI({
 
   // fetch 5 posts, including related tags and authors
   api.posts
-      .browse({limit: 5, include: 'tags,authors', filter: 'featured:-true'})
+      .browse({limit: 5, include: 'tags,authors', filter: `updated_at:>'${yesterday}'`})
       .then((posts) => {
           posts.forEach((post) => {
-           //   console.log(post);
-
               console.log(post.title, post.featured);
           });
       })
