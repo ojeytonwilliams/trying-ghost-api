@@ -7,8 +7,8 @@ require('dotenv').config();
 const yesterday = moment().subtract(1, 'days').format();
 
 const api = new GhostContentAPI({
-    url: 'https://olivereytonwilliams.com',
-    key: process.env.CONTENT_API,
+    url: process.env.CONTENT_URL,
+    key: process.env.CONTENT_API_KEY,
     version: 'v2'
   });
 
@@ -17,7 +17,8 @@ const api = new GhostContentAPI({
       .browse({limit: 5, include: 'tags,authors', filter: `updated_at:>'${yesterday}'`})
       .then((posts) => {
           posts.forEach((post) => {
-              console.log(post.title, post.featured);
+            //  console.log(post)
+            console.log(post.title, post.featured);
           });
       })
       .catch((err) => {
