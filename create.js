@@ -9,7 +9,7 @@ const api = new GhostAdminAPI({
     version: 'v2'
   });
 
-// TODO, creating more than about 300 posts causes ghost to hang up, at least when it's backed by
-// sqlite.
-createPosts(api, 300);
+// TODO, creating more than about 300 posts causes ghost to hang up, at least when the ghost
+// site is backed by sqlite.
+createPosts(api, 3000);
 

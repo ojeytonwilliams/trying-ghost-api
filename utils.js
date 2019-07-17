@@ -52,6 +52,11 @@ export const createPosts = (api, n, cb) => {
 
     // TODO use Promise.all to wait for 300 promises to complete, then trigger another 300 and repeat as many times as is needed
     // That's assuming mysql can't cope (the ~300 post limit appeared on sqlite)
+    // EDIT: I see two options.
+    // One, batch operations at `max_connections` size, probably via promises
+    // Two, catch the error and resend after a delay.
+
+    // Option one seems best, since I have no idea how long to wait.
     for(let i = 0; i < n; i++) {
         const bodyTexts = lorem.generateParagraphs(7).split('\n');
 
@@ -63,7 +68,7 @@ export const createPosts = (api, n, cb) => {
             console.log('created page', i);
         })
         .catch(reason => {
-            console.error('Failed to create post', reason)
+            console.error('Failed to create post', reason.context)
         });
     }
 }
