@@ -48,32 +48,36 @@ function createMultipleSections(texts) {
     return texts.map(createSection).join(',');
 }
 
-export const createPosts = (api, n, cb) => {
-
-    // TODO use Promise.all to wait for 300 promises to complete, then trigger another 300 and repeat as many times as is needed
-    // That's assuming mysql can't cope (the ~300 post limit appeared on sqlite)
-    // EDIT: I see two options.
-    // One, batch operations at `max_connections` size, probably via promises
-    // Two, catch the error and resend after a delay.
-
-    // Option one seems best, since I have no idea how long to wait.
-    for(let i = 0; i < n; i++) {
-        const bodyTexts = lorem.generateParagraphs(7).split('\n');
-
-        api.posts.add({
-            title: 'My ' + i + 'th API post',
-            status: 'published',
-            mobiledoc: '{"version":"0.3.1","atoms":[],"cards":[],"markups":[],"sections":[' + createMultipleSections(bodyTexts) + ']}'
-        }).then(result => {
-            console.log('created page', i);
-        })
-        .catch(reason => {
-            console.error('Failed to create post', reason.context)
-        });
-    }
+export const createPosts = (api, n, from = 0, pool = 151) => {
+    // mysql has a max_connections (151 by default), so you have to batch post creation.
+    const to = Math.min(n - from, pool);
+    batchCreate(api, from, to).then(last => {
+        if (last < n - 1) {
+            createPosts(api, n, last + 1);
+        }
+    })
 }
 
+function batchCreate(api, from, to) {
+    // Create array of n promises
+    const posts = Array.from({length: to}, (v, i) => createPost(api, from + i));
+    // New promise reports the last post created
+    return Promise.all(posts).then(() => from + to - 1);
+}
 
+function createPost(api, i) {
+    const bodyTexts = lorem.generateParagraphs(7).split('\n');
+    return api.posts.add({
+        title: 'My ' + i + 'th API post',
+        status: 'published',
+        mobiledoc: '{"version":"0.3.1","atoms":[],"cards":[],"markups":[],"sections":[' + createMultipleSections(bodyTexts) + ']}'
+    }).then(result => {
+        console.log('created page', i);
+    })
+    .catch(reason => {
+        console.error('Failed to create post', reason.context)
+    });
+}
 
 export const browsePosts = (api, fields) => {
     api.posts.browse({fields}).then(results => {
