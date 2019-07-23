@@ -1,4 +1,4 @@
-import {removeAllPosts, browsePosts, createPosts} from "./utils";
+import {removeAllPosts} from "./utils";
 import GhostAdminAPI from "@tryghost/admin-api";
 
 require('dotenv').config();

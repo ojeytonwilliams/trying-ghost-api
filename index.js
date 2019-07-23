@@ -1,10 +1,13 @@
 import GhostContentAPI from '@tryghost/content-api';
-import moment from 'moment';
+import {argv} from 'yargs';
+
+import {browsePosts, browsePostsByAuthor} from './utils';
+
 
 require('dotenv').config();
 
-// Note, it needs to be something that new Date() will understand, which format() gives you.
-const yesterday = moment().subtract(1, 'days').format();
+console.log(argv._)
+const author = argv._[0] || 'oliver';
 
 const api = new GhostContentAPI({
     url: process.env.CONTENT_URL,
@@ -12,15 +15,5 @@ const api = new GhostContentAPI({
     version: 'v2'
   });
 
-  // fetch 5 posts, including related tags and authors
-  api.posts
-      .browse({limit: 5, include: 'tags,authors', filter: `updated_at:>'${yesterday}'`})
-      .then((posts) => {
-          posts.forEach((post) => {
-            //  console.log(post)
-            console.log(post.title, post.featured);
-          });
-      })
-      .catch((err) => {
-          console.error(err);
-      });
+//browsePosts(api);
+browsePostsByAuthor(api, author);

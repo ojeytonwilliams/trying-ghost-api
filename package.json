@@ -24,7 +24,8 @@
     "@tryghost/admin-api": "^0.5.1",
     "@tryghost/content-api": "^1.2.5",
     "eslint": "^6.0.1",
-    "lorem-ipsum": "^2.0.3"
+    "lorem-ipsum": "^2.0.3",
+    "yargs": "^13.3.0"
   },
   "dependencies": {
     "dotenv": "^8.0.0",
