@@ -1,7 +1,11 @@
-import {removeAllPosts, browsePosts, createPosts} from "./utils";
 import GhostAdminAPI from "@tryghost/admin-api";
+import {argv} from 'yargs';
+
+import {createPosts} from "./utils";
 
 require('dotenv').config();
+
+const count = argv._[0] || 5;
 
 const api = new GhostAdminAPI({
     url: process.env.CONTENT_URL,
@@ -10,6 +14,6 @@ const api = new GhostAdminAPI({
   });
 
 
-createPosts(api, 12000);
+createPosts(api, count);
 
 // tried 11218 and it seems fine.

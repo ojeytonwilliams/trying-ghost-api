@@ -9,5 +9,6 @@ const api = new GhostAdminAPI({
     version: 'v2'
   });
 
+// NOTE: for very large databases, it's probably smarter to just use mysql directly to remove posts.
 
 removeAllPosts(api);

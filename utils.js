@@ -38,11 +38,11 @@ function remove(api, page = 1, dryrun = false) {
 }
 
 function createSection(text) {
-  return JSON.stringify([1, "p", [[0, [], 0, text]]]);
+  return [1, "p", [[0, [], 0, text]]];
 }
 
 function createMultipleSections(texts) {
-  return texts.map(createSection).join(",");
+  return texts.map(createSection);
 }
 
 export const createPosts = (api, n, from = 0, pool = 151) => {
@@ -64,27 +64,39 @@ function batchCreate(api, from, to) {
 
 function createPost(api, i) {
   const bodyTexts = lorem.generateParagraphs(7).split("\n");
+  const mobiledoc = createMobiledoc();
+  mobiledoc.sections = createMultipleSections(bodyTexts);
+
   return api.posts
     .add({
       title: "My " + i + "th API post",
       status: "published",
-      mobiledoc:
-        '{"version":"0.3.1","atoms":[],"cards":[],"markups":[],"sections":[' +
-        createMultipleSections(bodyTexts) +
-        "]}"
+      mobiledoc: JSON.stringify(mobiledoc)
     })
     .then(result => {
       console.log("created page", i);
     })
     .catch(reason => {
-      console.error("Failed to create post", reason.context);
+    //  console.error("Failed to create post", reason.context);
+      console.error("Failed to create post", reason.code, reason.context)
     });
 }
 
+function createMobiledoc() {
+  const template = {
+    version: "0.3.1",
+    atoms: [],
+    cards: [],
+    markups: [],
+    sections: [],
+  }
+  return {...template};
+}
+
 // Note, it needs to be something that new Date() will understand, which format() gives you.
-const yesterday = moment()
-  .subtract(1, "days")
-  .format();
+// const yesterday = moment()
+//   .subtract(1, "days")
+//   .format();
 export const browsePosts = api => {
   api.posts
     //  .browse({limit: 5, include: 'tags,authors', filter: `updated_at:>'${yesterday}'`})
