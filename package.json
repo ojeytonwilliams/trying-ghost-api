@@ -8,6 +8,8 @@
     "create": "node -r esm create.js",
     "purge": "node -r esm purge.js",
     "browse": "node -r esm index.js",
+    "lint": "eslint .",
+    "format": "eslint --fix .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

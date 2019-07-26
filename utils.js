@@ -1,5 +1,6 @@
-import { LoremIpsum } from "lorem-ipsum";
-import moment from "moment";
+import { LoremIpsum } from 'lorem-ipsum';
+import moment from 'moment';
+import { shuffle } from 'lodash';
 
 const lorem = new LoremIpsum({
   sentencesPerParagraph: {
@@ -14,38 +15,38 @@ const lorem = new LoremIpsum({
 });
 
 export const removeAllPosts = api => {
-  remove(api, 1);
+  remove(api);
 };
 
-// TODO This isn't quite deleting everything, as yet.
-function remove(api, page = 1, dryrun = false) {
-  console.log("removing page", page);
+// This looks a bit odd, but the main reason is that batch deletion is unsafe (multiple things get updated
+// in a single delete call).  Hence we look for the next post, delete it and repeat (each time deleting
+// a different next post)
+function remove (api) {
+  api.posts.browse({ fields: ['id'], limit: 1 }).then(results => {
+    api.posts.delete(results[0]).then(() => {
+      const pagination = results.meta.pagination;
 
-  api.posts.browse({ page, fields: ["id"] }).then(results => {
-    results.forEach(post => {
-      if (dryrun) {
-        console.log("DRY RUN", post);
-      } else {
-        api.posts.delete(post);
+      if (pagination.next && pagination.next <= pagination.pages) {
+        remove(api);
       }
-    });
-    const pagination = results.meta.pagination;
-
-    if (pagination.next && pagination.next <= pagination.pages) {
-      remove(api, page + 1, dryrun);
     }
+    ).catch(err => {
+      console.log(err);
+    });
   });
 }
 
-function createSection(text) {
-  return [1, "p", [[0, [], 0, text]]];
+function createSection (text) {
+  return [1, 'p', [[0, [], 0, text]]];
 }
 
-function createMultipleSections(texts) {
+function createMultipleSections (texts) {
   return texts.map(createSection);
 }
 
-export const createPosts = (api, n, from = 0, pool = 151) => {
+// NOTE pool is currently set at one, not because the db can't cope, but because
+// (I think) it's still updating tags when a new post POST comes in and it it's locked.
+export const createPosts = (api, n, from = 0, pool = 1) => {
   // mysql has a max_connections (151 by default), so you have to batch post creation.
   const to = Math.min(n - from, pool);
   batchCreate(api, from, to).then(last => {
@@ -55,42 +56,48 @@ export const createPosts = (api, n, from = 0, pool = 151) => {
   });
 };
 
-function batchCreate(api, from, to) {
+function batchCreate (api, from, to) {
   // Create array of n promises
   const posts = Array.from({ length: to }, (v, i) => createPost(api, from + i));
   // New promise reports the last post created
   return Promise.all(posts).then(() => from + to - 1);
 }
 
-function createPost(api, i) {
-  const bodyTexts = lorem.generateParagraphs(7).split("\n");
+function createPost (api, i) {
+  const bodyTexts = lorem.generateParagraphs(7).split('\n');
   const mobiledoc = createMobiledoc();
   mobiledoc.sections = createMultipleSections(bodyTexts);
+  const tags = ['js', 'css', 'html', 'maths', 'coding', 'github', 'node', 'fcc', 'devops', 'git', 'life',
+    'tools'];
+  const tagsUsed = randomTags(tags, 5);
+  // const tagsUsed = ["debug"]
 
   return api.posts
     .add({
-      title: "My " + i + "th API post",
-      status: "published",
-      mobiledoc: JSON.stringify(mobiledoc)
+      title: 'My ' + i + 'th API post',
+      status: 'published',
+      mobiledoc: JSON.stringify(mobiledoc),
+      tags: tagsUsed
     })
     .then(result => {
-      console.log("created page", i);
+      console.log('created page', i);
+      console.log('with tags', tagsUsed);
     })
     .catch(reason => {
-    //  console.error("Failed to create post", reason.context);
-      console.error("Failed to create post", reason.code, reason.context)
+      console.error('Failed to create post', reason);
+    //  console.error("Failed to create post", reason.code, reason.context)
     });
 }
 
-function createMobiledoc() {
+function createMobiledoc () {
   const template = {
-    version: "0.3.1",
+    version: '0.3.1',
     atoms: [],
     cards: [],
     markups: [],
-    sections: [],
-  }
-  return {...template};
+    sections: []
+  };
+  return { ...template };
 }
 
 // Note, it needs to be something that new Date() will understand, which format() gives you.
@@ -100,7 +107,7 @@ function createMobiledoc() {
 export const browsePosts = api => {
   api.posts
     //  .browse({limit: 5, include: 'tags,authors', filter: `updated_at:>'${yesterday}'`})
-    .browse({ limit: 5, include: "tags,authors" })
+    .browse({ limit: 5, include: 'tags,authors' })
     .then(posts => {
       posts.forEach(post => {
         //    console.log(post)
@@ -114,10 +121,10 @@ export const browsePosts = api => {
 
 export const browsePostsByAuthor = (api, author) => {
   api.posts
-    .browse({ limit: 5, include: "tags", filter: `author:${author}` })
+    .browse({ limit: 5, include: 'tags', filter: `author:${author}` })
     .then(posts => {
       posts.forEach(post => {
-        console.log(post)
+        console.log(post);
       // console.log(post.title, post.primary_author);
       });
     })
@@ -125,3 +132,8 @@ export const browsePostsByAuthor = (api, author) => {
       console.error(err);
     });
 };
+
+/* Returns 0 to max tags in a random order */
+function randomTags (tags, max = 5) {
+  return shuffle(tags).slice(0, Math.random() * (1 + Math.min(tags.length, max)));
+}
